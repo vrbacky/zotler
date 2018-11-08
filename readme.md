@@ -13,7 +13,7 @@ for subsequent removal of the orphan files.
 
 ## Installation
 
-###Linux
+### Linux
 
 1. Clone Zotler from GitHub
 
