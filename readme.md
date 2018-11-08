@@ -11,6 +11,23 @@ for subsequent removal of the orphan files.
 * Python 3.6+
 * Zotero with ZotFile addon
 
+## Installation
+
+###Linux
+
+1. Clone Zotler from GitHub
+
+   $ git clone https://github.com/vrbacky/zotler.git
+
+2. Change directory to Zotler
+
+   $ cd zotler
+
+3. Install Zotler
+   
+   $ python3 setup.py install
+
+
 ## Running Zotler
 
 ### Overview

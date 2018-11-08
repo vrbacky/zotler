@@ -1,0 +1,6 @@
+__name__ = 'zotler'
+__version__ = '0.0.1'
+__date__ = 'October 7, 2018'
+__author__ = 'Filip Vrbacky'
+__copyright__ = 'Copyright 2018, Filip Vrbacky'
+__license__ = 'MIT'
