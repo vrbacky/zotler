@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import sys
 
 import zotler
 
@@ -22,11 +23,25 @@ def delete_files(ctx, _, value):
     exit()
 
 
+def system_specific_path_to_profiles():
+    if sys.platform.startswith('linux'):
+        path = os.path.join('.zotero', 'zotero')
+    elif sys.platform.startswith('win'):
+        path = os.path.join('AppData', 'Roaming', 'Zotero',
+                            'Zotero', 'Profiles')
+    else:
+        raise OSError('Unidentified OS. Cannot predict preferences '
+                      'directory location.')
+    return os.path.join(str(Path.home()), path)
+
+
 def get_prefs_file(prefs_path):
     if prefs_path is None:
-        assumend_settings_dir = os.path.join(str(Path.home()), '.zotero', 'zotero')
-        for item in os.listdir(assumend_settings_dir):
-            complete_path = os.path.join(assumend_settings_dir, item)
+
+        assumed_profiles_dir = system_specific_path_to_profiles()
+
+        for item in os.listdir(assumed_profiles_dir):
+            complete_path = os.path.join(assumed_profiles_dir, item)
             if os.path.isdir(complete_path) and item.endswith('default'):
                 prefs_path = os.path.join(complete_path, 'prefs.js')
         print(f'*** No Zotero settings prefs.js file specified by -p option. '
@@ -57,13 +72,13 @@ def get_relative_paths(sql_file):
 
 def get_absolute_paths(base_path, relative_paths):
     for relative_path in relative_paths:
-        yield os.path.join(base_path, relative_path)
+        yield os.path.normpath(os.path.join(base_path, relative_path))
 
 
 def get_paths_to_existing_files(base_dir):
     for directory, subdirs, files in os.walk(base_dir):
         for i in files:
-            yield os.path.join(directory, i)
+            yield os.path.normpath(os.path.join(directory, i))
 
 
 def remove_files(filepaths):
