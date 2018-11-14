@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import platform
 import re
 import sqlite3
 import sys
@@ -24,9 +25,10 @@ def delete_files(ctx, _, value):
 
 
 def system_specific_path_to_profiles():
-    if sys.platform.startswith('linux'):
+    system = platform.system()
+    if system == 'Linux':
         path = os.path.join('.zotero', 'zotero')
-    elif sys.platform.startswith('win'):
+    elif system == 'Windows':
         path = os.path.join('AppData', 'Roaming', 'Zotero',
                             'Zotero', 'Profiles')
     else:
