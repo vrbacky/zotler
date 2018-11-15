@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+import click
 import os
 from pathlib import Path
 import platform
 import re
 import sqlite3
-import sys
 
 import zotler
 
@@ -13,15 +13,15 @@ import zotler
 def print_version(ctx, _, value):
     if not value or ctx.resilient_parsing:
         return
-    print(zotler.__version__)
-    exit()
+    click.echo(zotler.__version__)
+    ctx.exit()
 
 
 def delete_files(ctx, _, value):
     if not value or ctx.resilient_parsing:
         return
     remove_files(value)
-    exit()
+    ctx.exit()
 
 
 def system_specific_path_to_profiles():
