@@ -37,7 +37,7 @@ def system_specific_path_to_profiles():
     return os.path.join(str(Path.home()), path)
 
 
-def get_prefs_file(prefs_path):
+def get_prefs_file(prefs_path=None, silent=False):
     if prefs_path is None:
 
         assumed_profiles_dir = system_specific_path_to_profiles()
@@ -46,8 +46,9 @@ def get_prefs_file(prefs_path):
             complete_path = os.path.join(assumed_profiles_dir, item)
             if os.path.isdir(complete_path) and item.endswith('default'):
                 prefs_path = os.path.join(complete_path, 'prefs.js')
-        print(f'*** No Zotero settings prefs.js file specified by -p option. '
-              f'Default file {prefs_path} will be used.')
+        if not silent:
+            print(f'*** No Zotero settings prefs.js file specified by -p option. '
+                  f'Default file {prefs_path} will be used.')
     return prefs_path
 
 
@@ -81,6 +82,15 @@ def get_paths_to_existing_files(base_dir):
     for directory, subdirs, files in os.walk(base_dir):
         for i in files:
             yield os.path.normpath(os.path.join(directory, i))
+
+
+def create_set_of_orphans(zotero_dbase, zotero_prefs):
+    base_path = get_base_path(zotero_prefs)
+    relative_paths = get_relative_paths(zotero_dbase)
+    absolute_paths = set(get_absolute_paths(base_path, relative_paths))
+
+    existing_files = set(get_paths_to_existing_files(base_path))
+    return existing_files - absolute_paths
 
 
 def remove_files(filepaths):

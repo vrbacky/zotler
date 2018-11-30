@@ -14,14 +14,14 @@ from zotler import zotler
               help=('File containing list of files to be deleted. Usually created by '
                     'this script and specified by -o option. '
                     'All other options will be omitted if this one is used.'))
-@click.option('-p', '--prefs_file', type=click.Path(exists=True), default=None,
+@click.option('-p', '--zotero_prefs', type=click.Path(exists=True), default=None,
               help='Path to Zotero settings file prefs.js. If omitted, path to '
                    '~/.zotero/xxxxxxxx.default/prefs.js file is used.')
-@click.option('-f', '--zotero_file', type=click.Path(exists=True, dir_okay=False),
+@click.option('-d', '--zotero_dbase', type=click.Path(exists=True, dir_okay=False),
               default=None,
               help='Path to Zotero database (zotero.sqlite file). If omitted, Home'
                    'directory specified by -d option or default location is used')
-@click.option('-d', '--zotero_home_dir', type=click.Path(exists=True, file_okay=False),
+@click.option('-D', '--zotero_home_dir', type=click.Path(exists=True, file_okay=False),
               default=None,
               help='Path to Zotero home directory. It is not used, if path to Zotero '
                    'database file (-f) is provided. If omitted, default path'
@@ -33,7 +33,7 @@ from zotler import zotler
 @click.option('-v', '--version', is_flag=True, callback=zotler.print_version,
               expose_value=False, is_eager=True,
               help='Show version number and exit.')
-def main(prefs_file, zotero_home_dir, zotero_file, force_delete,
+def main(zotero_prefs, zotero_home_dir, zotero_dbase, force_delete,
          output_file):
     """
     Clean attachments in ZotFile Custom Location directory.
@@ -67,7 +67,7 @@ def main(prefs_file, zotero_home_dir, zotero_file, force_delete,
     or
 
     $ python zotler.py -p ~/.zotero/zotero/xxxxxxx.default/pref.js
-    -f ~/Zotero/zotero.sqlite -o ~/orphans.txt
+    -d ~/Zotero/zotero.sqlite -o ~/orphans.txt
 
     Delete files listed in ~/orphans.txt file:
 
@@ -77,16 +77,11 @@ def main(prefs_file, zotero_home_dir, zotero_file, force_delete,
     if zotero_home_dir is None:
         zotero_home_dir = os.path.join(str(Path.home()), 'Zotero')
 
-    if zotero_file is None:
-        zotero_file = os.path.join(zotero_home_dir, 'zotero.sqlite')
+    if zotero_dbase is None:
+        zotero_dbase = os.path.join(zotero_home_dir, 'zotero.sqlite')
 
-    prefs_file = zotler.get_prefs_file(prefs_file)
-    base_path = zotler.get_base_path(prefs_file)
-    relative_paths = zotler.get_relative_paths(zotero_file)
-    absolute_paths = set(zotler.get_absolute_paths(base_path, relative_paths))
-
-    existing_files = set(zotler.get_paths_to_existing_files(base_path))
-    orphan_files = existing_files - absolute_paths
+    zotero_prefs = zotler.get_prefs_file(zotero_prefs)
+    orphan_files = zotler.create_set_of_orphans(zotero_dbase, zotero_prefs)
 
     print(10 * '-')
 
