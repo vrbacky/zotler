@@ -95,6 +95,9 @@ setup(name=parsed_header.name,
           'console_scripts': [
               'zotler = bin.zotler:main',
           ],
+          'gui_scripts': [
+              'zotler_gui = bin.zotler_gui:main'
+          ],
       },
       classifiers=('Development Status :: 3 - Alpha',
                    'Environment :: Console',
