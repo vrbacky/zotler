@@ -96,5 +96,10 @@ def create_set_of_orphans(zotero_dbase, zotero_prefs):
 def remove_files(filepaths):
     for file in filepaths:
         path = file.strip()
+        if path == '':
+            continue
         print(f'Removing: {path}')
-        os.remove(path)
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            print(f'File {path} not found.')
