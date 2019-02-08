@@ -13,7 +13,7 @@ from zotler import __author__, __name__, __version__, zotler
 from zotler.gui.ui.custom_widgets import LabeledComboBox
 from zotler.gui.ui.variable_areas import DeleteOrphans, FindOrphans
 from zotler.gui.ui.dialogs import AboutDialog, ShowStdinDialog
-
+from zotler.exceptions import InvalidModeError
 
 class MainWindow(QMainWindow):
 
@@ -173,7 +173,18 @@ class MainWidget(QWidget):
         self.parent.about_dialog.show()
 
     def run_action(self):
+        if self.choose_mode.text == 'Find and delete orphan files':
+            self.find_orphans_action()
+        elif self.choose_mode.text == 'Delete orphan files':
+            self.delete_orphans_action(
+                self.delete_orphans.path_to_list_of_orphans.text.strip()
+            )
+        else:
+            raise InvalidModeError('Invalid mode\'s been chosen.')
 
+        self.quit_action()
+
+    def find_orphans_action(self):
         zotero_prefs = self.find_orphans.path_to_prefs_file.text
         zotero_dbase = self.find_orphans.path_to_database_file.text
         orphan_files = zotler.create_set_of_orphans(zotero_dbase, zotero_prefs)
@@ -185,13 +196,14 @@ class MainWidget(QWidget):
         with open(path_to_output_file, 'w') as output_file:
             print('\n'.join(orphan_files), file=output_file)
 
-        text_dialog = ShowStdinDialog(self, file_path=path_to_output_file)
+        self.delete_orphans_action(path_to_output_file)
+
+    def delete_orphans_action(self, path_to_orphans_file):
+        text_dialog = ShowStdinDialog(self, file_path=path_to_orphans_file)
         is_accepted = text_dialog.exec()
         if is_accepted:
-            with open(path_to_output_file, 'r') as file:
+            with open(path_to_orphans_file, 'r') as file:
                 zotler.remove_files(file.readlines())
-
-        self.quit_action()
 
     @staticmethod
     def quit_action():
