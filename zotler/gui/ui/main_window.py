@@ -6,14 +6,15 @@ import tempfile
 
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtGui import QFont, QPixmap, QIcon
-from PyQt5.QtWidgets import QLabel, QMainWindow, QPushButton, QWidget,\
-    QHBoxLayout, QVBoxLayout, QStackedWidget
+from PyQt5.QtWidgets import QLabel, QMainWindow, QPushButton, QWidget, \
+    QHBoxLayout, QVBoxLayout, QStackedWidget, QMessageBox
 
 from zotler import __author__, __name__, __version__, zotler
 from zotler.gui.ui.custom_widgets import LabeledComboBox
 from zotler.gui.ui.variable_areas import DeleteOrphans, FindOrphans
 from zotler.gui.ui.dialogs import AboutDialog, ShowStdinDialog
 from zotler.exceptions import InvalidModeError
+
 
 class MainWindow(QMainWindow):
 
@@ -174,22 +175,37 @@ class MainWidget(QWidget):
 
     def run_action(self):
         if self.choose_mode.text == 'Find and delete orphan files':
-            self.find_orphans_action()
-        elif self.choose_mode.text == 'Delete orphan files':
-            self.delete_orphans_action(
-                self.delete_orphans.path_to_list_of_orphans.text.strip()
+            zotero_prefs = self.find_orphans.path_to_prefs_file.text
+            zotero_dbase = self.find_orphans.path_to_database_file.text
+            path_to_output_file = self.find_orphans.path_to_output_file.text.strip()
+
+            error_messages = (
+                i
+                for i in (self.validate_path(zotero_prefs),
+                          self.validate_path(zotero_dbase))
+                if i is not None
             )
+
+            joined_messages = '\n'.join(error_messages)
+            if len(joined_messages) > 0:
+                self.show_error_dialog(joined_messages)
+            else:
+                self.find_orphans_action(zotero_prefs, zotero_dbase, path_to_output_file)
+
+        elif self.choose_mode.text == 'Delete orphan files':
+            path_to_orphans_file = self.delete_orphans.path_to_list_of_orphans.text.strip()
+
+            error_message = self.validate_path(path_to_orphans_file)
+            if error_message is None:
+                self.delete_orphans_action(path_to_orphans_file)
+            else:
+                self.show_error_dialog(error_message)
         else:
             raise InvalidModeError('Invalid mode\'s been chosen.')
 
-        self.quit_action()
-
-    def find_orphans_action(self):
-        zotero_prefs = self.find_orphans.path_to_prefs_file.text
-        zotero_dbase = self.find_orphans.path_to_database_file.text
+    def find_orphans_action(self, zotero_prefs, zotero_dbase, path_to_output_file):
         orphan_files = zotler.create_set_of_orphans(zotero_dbase, zotero_prefs)
 
-        path_to_output_file = self.find_orphans.path_to_output_file.text.strip()
         if path_to_output_file == '':
             _, path_to_output_file = tempfile.mkstemp(prefix='zotler_gui-')
 
@@ -204,6 +220,29 @@ class MainWidget(QWidget):
         if is_accepted:
             with open(path_to_orphans_file, 'r') as file:
                 zotler.remove_files(file.readlines())
+
+        self.quit_action()
+
+    @staticmethod
+    def show_error_dialog(joined_messages):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setWindowTitle('Error')
+        msg.setText(joined_messages)
+        msg.exec_()
+
+    @staticmethod
+    def validate_path(path, is_directory=False, is_existing=True):
+        message = None
+        if is_existing:
+            if not os.path.exists(path):
+                message = f'{path} doesn\'t exist'
+            elif is_directory and not os.path.isdir(path):
+                message = f'{path} is not a directory'
+            elif not is_directory and not os.path.isfile(path):
+                message = f'{path} is not a file'
+
+        return message
 
     @staticmethod
     def quit_action():
